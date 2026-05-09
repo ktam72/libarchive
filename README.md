@@ -1,4 +1,61 @@
-# Welcome to libarchive!
+# libarchive — MacRar Integration Fork
+
+本リポジトリは [libarchive](https://github.com/libarchive/libarchive) 公式ソースコード（v3.8.7 以降）をフォークし、**MacRar** アプリケーションに組み込むための改変を加えたものです。
+
+- **オリジナルソースコード**: https://github.com/libarchive/libarchive
+- **ライセンス**: オリジナルに準拠します（[COPYING](COPYING) 参照）
+- **目的**: MacRar でのアーカイブ読み取り・書き込み機能の提供
+
+---
+
+## オリジナルからの主な変更点
+
+以下はフォーク後に取り込まれたセキュリティ改善・バグ修正・機能追加の概要です。
+
+### セキュリティハードニング
+
+| カテゴリ | 内容 |
+|---------|------|
+| **CAB** | 不正なヘッダ処理の強化 |
+| **RAR5** | デコードテーブルサイズが 2^16 を超える場合に FAIL |
+| **7zip** | ファイル数・SFX メモリ割り当ての境界チェック強化、エラーパスの後処理改善 |
+| **ZIP** | 空パス名・長すぎるパス名の拒否、LZMA メモリ制限（576MiB） |
+| **ACL** | 範囲外の数値 ID の拒否、NULL 名エントリでのバッファオーバーラン修正 |
+| **tar** | タイムスタンプ解析の堅牢化 |
+| **ISO9660** | Joliet パス名バッファオーバーフロー修正、`../../` パス正規化の改善 |
+| **linkresolver** | 解放後使用（double-free）の修正 |
+| **compress filter** | 初期化前の追記で SIGSEGV が発生する問題を修正 |
+| **各種メモリリーク** | テストスイート・mtree・tar など |
+
+### 機能追加
+
+- LZOP 圧縮サポート
+- Darwin（macOS）ネイティブ暗号ダイジェスト（libsystem）対応
+- CMake ビルドでの `list.h` 自動更新
+- PPMd シンボル修正（Windows ビルド対応）
+
+### テスト・ビルド改善
+
+- テストフレームワークのドキュメント化と自動テスト検出
+- テストの耐障害性向上
+- `make distcheck` で CMake ビルドを検証
+
+### 静的解析 (cppcheck 2.20.0)
+
+`libarchive/` 全体（457 ファイル）に対して `--enable=all` で静的解析を実施した結果：
+
+| カテゴリ | 判定 | 内訳 |
+|---------|------|------|
+| **error** | 0 件 | 実害のあるバグは検出されず |
+| **warning** | 多数 | すべてテストコード内の `assert((a = fn()) != NULL)` イディオム — 意図的なパターンであり問題なし |
+| **nullPointer** | 軽微 | テストファイル内の `malloc` / `fopen` 失敗時未チェック (OOM ケースのみ) |
+| **style** | 軽微 | `staticFunction`（公開APIの偽陽性）、`variableScope`、`constParameterPointer` — スタイル提案のみ |
+
+ライブラリ本体に実害のある指摘はなく、品質基準を満たしていることを確認済み。
+
+---
+
+## Welcome to libarchive!
 
 The libarchive project develops a portable, efficient C library that
 can read and write streaming archives in a variety of formats.  It
